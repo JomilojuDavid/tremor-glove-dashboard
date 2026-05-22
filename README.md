@@ -1,4 +1,4 @@
-# NeuroSense AI
+# TremorGlove Dashboard
 
 Futuristic biomedical dashboard for real-time tremor monitoring and AI-powered classification.
 
@@ -32,7 +32,7 @@ Outputs:
 
 ## Deploy to Vercel
 
-This repo is pre-configured for Vercel:
+This repo was pre-configured for deployment to Vercel for Presentation:
 
 - `vercel.json` sets the build command, static output directory and routes all
   non-asset requests through `/api`.
@@ -46,3 +46,5 @@ Steps:
 3. Deploy.
 
 No environment variables are required.
+
+Developed for later use with API Backend for ESP32 Sensor and other glove component.
