@@ -5,6 +5,6 @@
   "framework": null,
   "rewrites": [
     { "source": "/assets/(.*)", "destination": "/assets/$1" },
-    { "source": "/(.*)", "destination": "/api" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
