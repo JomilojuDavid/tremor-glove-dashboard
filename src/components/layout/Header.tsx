@@ -61,11 +61,11 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
           </div>
 
           <button
-            onClick={() => setLight((v) => !v)}
+            onClick={toggle}
             className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-background/40 transition-colors hover:bg-white/5"
             aria-label="Toggle theme"
           >
-            {light ? <HiOutlineMoon className="h-4 w-4" /> : <HiOutlineSun className="h-4 w-4" />}
+            {theme === "light" ? <HiOutlineMoon className="h-4 w-4" /> : <HiOutlineSun className="h-4 w-4" />}
           </button>
 
           <button className="relative grid h-10 w-10 place-items-center rounded-xl border border-border bg-background/40 hover:bg-white/5">
