@@ -8,20 +8,17 @@ import {
   HiOutlineWifi,
 } from "react-icons/hi2";
 import { TbBattery3 } from "react-icons/tb";
+import { useTheme } from "@/hooks/use-theme";
 
 export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const [now, setNow] = useState(new Date());
-  const [light, setLight] = useState(false);
+  const { theme, toggle } = useTheme();
   const [battery] = useState(82);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("light", light);
-  }, [light]);
 
   return (
     <header className="sticky top-0 z-20 glass border-b border-border">
@@ -64,11 +61,11 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
           </div>
 
           <button
-            onClick={() => setLight((v) => !v)}
+            onClick={toggle}
             className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-background/40 transition-colors hover:bg-white/5"
             aria-label="Toggle theme"
           >
-            {light ? <HiOutlineMoon className="h-4 w-4" /> : <HiOutlineSun className="h-4 w-4" />}
+            {theme === "light" ? <HiOutlineMoon className="h-4 w-4" /> : <HiOutlineSun className="h-4 w-4" />}
           </button>
 
           <button className="relative grid h-10 w-10 place-items-center rounded-xl border border-border bg-background/40 hover:bg-white/5">
