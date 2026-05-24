@@ -8,20 +8,17 @@ import {
   HiOutlineWifi,
 } from "react-icons/hi2";
 import { TbBattery3 } from "react-icons/tb";
+import { useTheme } from "@/hooks/use-theme";
 
 export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const [now, setNow] = useState(new Date());
-  const [light, setLight] = useState(false);
+  const { theme, toggle } = useTheme();
   const [battery] = useState(82);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("light", light);
-  }, [light]);
 
   return (
     <header className="sticky top-0 z-20 glass border-b border-border">
