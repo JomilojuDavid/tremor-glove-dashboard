@@ -47,8 +47,8 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
           </div>
 
           <div className="hidden lg:flex items-center gap-2 rounded-xl border border-border bg-background/40 px-3 py-2 text-xs">
-            <span className="font-mono">{now.toLocaleTimeString()}</span>
-            <span className="text-muted-foreground">{now.toLocaleDateString()}</span>
+            <span className="font-mono">{now ? now.toLocaleTimeString() : "--:--:--"}</span>
+            <span className="text-muted-foreground">{now ? now.toLocaleDateString() : ""}</span>
           </div>
 
           <div className="flex items-center gap-2 rounded-xl border border-border bg-background/40 px-3 py-2 text-xs">
