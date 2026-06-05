@@ -7,34 +7,92 @@ import {
   HiOutlineCpuChip,
   HiOutlineSwatch,
   HiOutlineCheck,
+  HiOutlineGlobeAlt,
+  HiOutlineShieldCheck,
+  HiOutlineClipboardDocumentList,
 } from "react-icons/hi2";
 import { useTheme } from "@/hooks/use-theme";
 
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
 
 type Settings = {
+  // Clinician
   clinicianName: string;
   clinicianEmail: string;
+  clinicianPhone: string;
+  licenseNumber: string;
   organization: string;
+  department: string;
   patientId: string;
+  patientName: string;
+  patientAge: number;
+  patientSex: "male" | "female" | "other";
+  // Device
+  deviceSerial: string;
+  firmware: string;
   samplingHz: number;
   tremorThreshold: number;
+  emgGain: number;
+  filterLow: number;
+  filterHigh: number;
+  // Alerts
   alertSound: boolean;
   emailAlerts: boolean;
   smsAlerts: boolean;
+  alertEmail: string;
+  alertPhone: string;
+  severityFloor: "low" | "moderate" | "high" | "critical";
+  // Regional
+  timezone: string;
+  language: "en" | "es" | "fr" | "de" | "pt";
+  units: "metric" | "imperial";
+  dateFormat: "iso" | "us" | "eu";
+  // Privacy / Data
+  retentionDays: number;
+  anonymizeExports: boolean;
+  shareTelemetry: boolean;
+  // Reports
+  reportHeader: string;
+  reportFooter: string;
+  autoReport: boolean;
+  // Appearance
   accentColor: "blue" | "emerald" | "violet" | "amber";
 };
 
 const DEFAULTS: Settings = {
   clinicianName: "Dr. Rohan Mehta",
   clinicianEmail: "r.mehta@neurosense.ai",
+  clinicianPhone: "+1 415 555 0142",
+  licenseNumber: "MD-204918",
   organization: "NeuroSense Research Lab",
+  department: "Movement Disorders",
   patientId: "PT-00421",
+  patientName: "Anonymous Subject",
+  patientAge: 62,
+  patientSex: "male",
+  deviceSerial: "NS-EMG-0042",
+  firmware: "2.4.1",
   samplingHz: 200,
   tremorThreshold: 4.5,
+  emgGain: 1000,
+  filterLow: 20,
+  filterHigh: 450,
   alertSound: true,
   emailAlerts: true,
   smsAlerts: false,
+  alertEmail: "alerts@neurosense.ai",
+  alertPhone: "+1 415 555 0199",
+  severityFloor: "moderate",
+  timezone: "UTC",
+  language: "en",
+  units: "metric",
+  dateFormat: "iso",
+  retentionDays: 90,
+  anonymizeExports: true,
+  shareTelemetry: false,
+  reportHeader: "NeuroSense Clinical Report",
+  reportFooter: "Confidential — for clinical use only.",
+  autoReport: false,
   accentColor: "blue",
 };
 
@@ -73,7 +131,7 @@ function SettingsPage() {
         <div>
           <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">System Preferences</div>
           <h1 className="mt-1 text-2xl font-semibold">Settings</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Configure clinician profile, device, alerts and appearance.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Configure clinician profile, patient, device, alerts, regional, privacy, reports and appearance.</p>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={onReset}
@@ -89,22 +147,33 @@ function SettingsPage() {
 
       <Section icon={<HiOutlineUserCircle className="h-5 w-5" />} title="Clinician Profile"
         subtitle="Identity used on reports and audit logs.">
-        <Field label="Full name">
-          <input value={s.clinicianName} onChange={(e) => update("clinicianName", e.target.value)} className={input} />
+        <Field label="Full name"><input value={s.clinicianName} onChange={(e) => update("clinicianName", e.target.value)} className={input} /></Field>
+        <Field label="Email"><input type="email" value={s.clinicianEmail} onChange={(e) => update("clinicianEmail", e.target.value)} className={input} /></Field>
+        <Field label="Phone"><input value={s.clinicianPhone} onChange={(e) => update("clinicianPhone", e.target.value)} className={input} /></Field>
+        <Field label="License number"><input value={s.licenseNumber} onChange={(e) => update("licenseNumber", e.target.value)} className={input} /></Field>
+        <Field label="Organization"><input value={s.organization} onChange={(e) => update("organization", e.target.value)} className={input} /></Field>
+        <Field label="Department"><input value={s.department} onChange={(e) => update("department", e.target.value)} className={input} /></Field>
+      </Section>
+
+      <Section icon={<HiOutlineClipboardDocumentList className="h-5 w-5" />} title="Active Patient"
+        subtitle="Subject currently bound to this session.">
+        <Field label="Patient ID"><input value={s.patientId} onChange={(e) => update("patientId", e.target.value)} className={input} /></Field>
+        <Field label="Display name"><input value={s.patientName} onChange={(e) => update("patientName", e.target.value)} className={input} /></Field>
+        <Field label="Age">
+          <input type="number" min={0} max={120} value={s.patientAge}
+            onChange={(e) => update("patientAge", Number(e.target.value))} className={input} />
         </Field>
-        <Field label="Email">
-          <input type="email" value={s.clinicianEmail} onChange={(e) => update("clinicianEmail", e.target.value)} className={input} />
-        </Field>
-        <Field label="Organization">
-          <input value={s.organization} onChange={(e) => update("organization", e.target.value)} className={input} />
-        </Field>
-        <Field label="Active Patient ID">
-          <input value={s.patientId} onChange={(e) => update("patientId", e.target.value)} className={input} />
+        <Field label="Sex">
+          <select value={s.patientSex} onChange={(e) => update("patientSex", e.target.value as Settings["patientSex"])} className={input}>
+            <option value="male">Male</option><option value="female">Female</option><option value="other">Other</option>
+          </select>
         </Field>
       </Section>
 
       <Section icon={<HiOutlineCpuChip className="h-5 w-5" />} title="Device & Signal"
-        subtitle="Sampling and AI classification thresholds.">
+        subtitle="Sampling, gain, filters and classification thresholds.">
+        <Field label="Device serial"><input value={s.deviceSerial} onChange={(e) => update("deviceSerial", e.target.value)} className={input} /></Field>
+        <Field label="Firmware"><input value={s.firmware} onChange={(e) => update("firmware", e.target.value)} className={input} /></Field>
         <Field label={`Sampling rate — ${s.samplingHz} Hz`}>
           <input type="range" min={50} max={1000} step={10} value={s.samplingHz}
             onChange={(e) => update("samplingHz", Number(e.target.value))} className="w-full accent-[var(--color-primary)]" />
@@ -112,6 +181,19 @@ function SettingsPage() {
         <Field label={`Tremor threshold — ${s.tremorThreshold.toFixed(1)} Hz`}>
           <input type="range" min={1} max={12} step={0.1} value={s.tremorThreshold}
             onChange={(e) => update("tremorThreshold", Number(e.target.value))} className="w-full accent-[var(--color-primary)]" />
+        </Field>
+        <Field label={`EMG gain — ${s.emgGain}×`}>
+          <input type="range" min={100} max={5000} step={50} value={s.emgGain}
+            onChange={(e) => update("emgGain", Number(e.target.value))} className="w-full accent-[var(--color-primary)]" />
+        </Field>
+        <Field label="Bandpass (Hz)">
+          <div className="flex items-center gap-2">
+            <input type="number" min={1} max={100} value={s.filterLow}
+              onChange={(e) => update("filterLow", Number(e.target.value))} className={input} />
+            <span className="text-xs text-muted-foreground">to</span>
+            <input type="number" min={100} max={1000} value={s.filterHigh}
+              onChange={(e) => update("filterHigh", Number(e.target.value))} className={input} />
+          </div>
         </Field>
       </Section>
 
@@ -123,6 +205,61 @@ function SettingsPage() {
           value={s.emailAlerts} onChange={(v) => update("emailAlerts", v)} />
         <Toggle label="SMS alerts" hint="Send urgent SMS for red-zone events"
           value={s.smsAlerts} onChange={(v) => update("smsAlerts", v)} />
+        <Field label="Severity floor">
+          <select value={s.severityFloor} onChange={(e) => update("severityFloor", e.target.value as Settings["severityFloor"])} className={input}>
+            <option value="low">Low</option><option value="moderate">Moderate</option>
+            <option value="high">High</option><option value="critical">Critical only</option>
+          </select>
+        </Field>
+        <Field label="Alert email"><input type="email" value={s.alertEmail} onChange={(e) => update("alertEmail", e.target.value)} className={input} /></Field>
+        <Field label="Alert phone"><input value={s.alertPhone} onChange={(e) => update("alertPhone", e.target.value)} className={input} /></Field>
+      </Section>
+
+      <Section icon={<HiOutlineGlobeAlt className="h-5 w-5" />} title="Regional & Format"
+        subtitle="Locale, units and time display.">
+        <Field label="Timezone">
+          <select value={s.timezone} onChange={(e) => update("timezone", e.target.value)} className={input}>
+            {["UTC","America/Los_Angeles","America/New_York","Europe/London","Europe/Berlin","Asia/Tokyo","Asia/Kolkata","Australia/Sydney"].map(z => <option key={z} value={z}>{z}</option>)}
+          </select>
+        </Field>
+        <Field label="Language">
+          <select value={s.language} onChange={(e) => update("language", e.target.value as Settings["language"])} className={input}>
+            <option value="en">English</option><option value="es">Español</option>
+            <option value="fr">Français</option><option value="de">Deutsch</option><option value="pt">Português</option>
+          </select>
+        </Field>
+        <Field label="Units">
+          <select value={s.units} onChange={(e) => update("units", e.target.value as Settings["units"])} className={input}>
+            <option value="metric">Metric</option><option value="imperial">Imperial</option>
+          </select>
+        </Field>
+        <Field label="Date format">
+          <select value={s.dateFormat} onChange={(e) => update("dateFormat", e.target.value as Settings["dateFormat"])} className={input}>
+            <option value="iso">2026-06-05 (ISO)</option>
+            <option value="us">06/05/2026 (US)</option>
+            <option value="eu">05/06/2026 (EU)</option>
+          </select>
+        </Field>
+      </Section>
+
+      <Section icon={<HiOutlineShieldCheck className="h-5 w-5" />} title="Privacy & Data"
+        subtitle="Retention and what leaves the device.">
+        <Field label={`Retention — ${s.retentionDays} days`}>
+          <input type="range" min={7} max={365} step={1} value={s.retentionDays}
+            onChange={(e) => update("retentionDays", Number(e.target.value))} className="w-full accent-[var(--color-primary)]" />
+        </Field>
+        <Toggle label="Anonymize exports" hint="Strip PII from CSV/PDF exports"
+          value={s.anonymizeExports} onChange={(v) => update("anonymizeExports", v)} />
+        <Toggle label="Share anonymous telemetry" hint="Help improve the AI model"
+          value={s.shareTelemetry} onChange={(v) => update("shareTelemetry", v)} />
+      </Section>
+
+      <Section icon={<HiOutlineClipboardDocumentList className="h-5 w-5" />} title="Reports"
+        subtitle="Default header/footer and automation.">
+        <Field label="Report header"><input value={s.reportHeader} onChange={(e) => update("reportHeader", e.target.value)} className={input} /></Field>
+        <Field label="Report footer"><input value={s.reportFooter} onChange={(e) => update("reportFooter", e.target.value)} className={input} /></Field>
+        <Toggle label="Auto-generate weekly report" hint="Email a PDF every Monday 09:00"
+          value={s.autoReport} onChange={(v) => update("autoReport", v)} />
       </Section>
 
       <Section icon={<HiOutlineSwatch className="h-5 w-5" />} title="Appearance"
@@ -155,6 +292,17 @@ function SettingsPage() {
           </div>
         </Field>
       </Section>
+
+      <div className="flex items-center justify-end gap-2 pb-4">
+        <button type="button" onClick={onReset}
+          className="rounded-xl border border-border bg-background/40 px-4 py-2 text-sm hover:bg-white/5">
+          Reset to defaults
+        </button>
+        <button type="submit"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground glow-primary">
+          {saved ? <><HiOutlineCheck className="h-4 w-4" /> Saved</> : "Save Changes"}
+        </button>
+      </div>
 
       {saved && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
