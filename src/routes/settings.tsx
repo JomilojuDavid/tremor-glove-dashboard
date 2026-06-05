@@ -1,6 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   HiOutlineUserCircle,
   HiOutlineBellAlert,
@@ -10,56 +12,16 @@ import {
   HiOutlineGlobeAlt,
   HiOutlineShieldCheck,
   HiOutlineClipboardDocumentList,
+  HiOutlineCloud,
+  HiOutlineArrowRightOnRectangle,
 } from "react-icons/hi2";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/use-auth";
+import { getSettings, saveSettings, type SettingsData } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
 
-type Settings = {
-  // Clinician
-  clinicianName: string;
-  clinicianEmail: string;
-  clinicianPhone: string;
-  licenseNumber: string;
-  organization: string;
-  department: string;
-  patientId: string;
-  patientName: string;
-  patientAge: number;
-  patientSex: "male" | "female" | "other";
-  // Device
-  deviceSerial: string;
-  firmware: string;
-  samplingHz: number;
-  tremorThreshold: number;
-  emgGain: number;
-  filterLow: number;
-  filterHigh: number;
-  // Alerts
-  alertSound: boolean;
-  emailAlerts: boolean;
-  smsAlerts: boolean;
-  alertEmail: string;
-  alertPhone: string;
-  severityFloor: "low" | "moderate" | "high" | "critical";
-  // Regional
-  timezone: string;
-  language: "en" | "es" | "fr" | "de" | "pt";
-  units: "metric" | "imperial";
-  dateFormat: "iso" | "us" | "eu";
-  // Privacy / Data
-  retentionDays: number;
-  anonymizeExports: boolean;
-  shareTelemetry: boolean;
-  // Reports
-  reportHeader: string;
-  reportFooter: string;
-  autoReport: boolean;
-  // Appearance
-  accentColor: "blue" | "emerald" | "violet" | "amber";
-};
-
-const DEFAULTS: Settings = {
+const DEFAULTS: SettingsData = {
   clinicianName: "Dr. Rohan Mehta",
   clinicianEmail: "r.mehta@neurosense.ai",
   clinicianPhone: "+1 415 555 0142",
@@ -96,34 +58,67 @@ const DEFAULTS: Settings = {
   accentColor: "blue",
 };
 
-const KEY = "neurosense-settings";
+const LOCAL_KEY = "neurosense-settings";
 
-function load(): Settings {
+function loadLocal(): SettingsData {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(LOCAL_KEY);
     if (raw) return { ...DEFAULTS, ...JSON.parse(raw) };
   } catch {}
   return DEFAULTS;
 }
 
 function SettingsPage() {
-  const [s, setS] = useState<Settings>(DEFAULTS);
-  const [saved, setSaved] = useState(false);
+  const { user, loading: authLoading, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
 
-  useEffect(() => { setS(load()); }, []);
+  const [s, setS] = useState<SettingsData>(DEFAULTS);
+  const [saved, setSaved] = useState(false);
 
-  const update = <K extends keyof Settings>(k: K, v: Settings[K]) =>
+  const fetchSettings = useServerFn(getSettings);
+  const persistSettings = useServerFn(saveSettings);
+
+  const query = useQuery({
+    queryKey: ["user-settings", user?.id ?? "anon"],
+    queryFn: () => fetchSettings(),
+    enabled: !!user,
+  });
+
+  // Hydrate state from remote (signed in) or local (signed out).
+  useEffect(() => {
+    if (user) {
+      if (query.data) setS({ ...DEFAULTS, ...(query.data.data ?? {}) });
+    } else {
+      setS(loadLocal());
+    }
+  }, [user, query.data]);
+
+  const mutation = useMutation({
+    mutationFn: (data: SettingsData) => persistSettings({ data }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["user-settings"] });
+      setSaved(true); setTimeout(() => setSaved(false), 2000);
+    },
+  });
+
+  const update = <K extends keyof SettingsData>(k: K, v: SettingsData[K]) =>
     setS((prev) => ({ ...prev, [k]: v }));
 
   const onSave = (e: React.FormEvent) => {
     e.preventDefault();
-    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {}
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    if (user) {
+      mutation.mutate(s);
+    } else {
+      try { localStorage.setItem(LOCAL_KEY, JSON.stringify(s)); } catch {}
+      setSaved(true); setTimeout(() => setSaved(false), 2000);
+    }
   };
 
   const onReset = () => setS(DEFAULTS);
+
+  const syncing = user && (query.isLoading || mutation.isPending);
 
   return (
     <form onSubmit={onSave} className="mx-auto max-w-5xl space-y-6">
@@ -138,12 +133,42 @@ function SettingsPage() {
             className="rounded-xl border border-border bg-background/40 px-4 py-2 text-sm hover:bg-white/5">
             Reset
           </button>
-          <button type="submit"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground glow-primary">
-            {saved ? <><HiOutlineCheck className="h-4 w-4" /> Saved</> : "Save Changes"}
+          <button type="submit" disabled={!!syncing}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground glow-primary disabled:opacity-60">
+            {saved ? <><HiOutlineCheck className="h-4 w-4" /> Saved</> : mutation.isPending ? "Saving…" : "Save Changes"}
           </button>
         </div>
       </header>
+
+      {/* Sync status banner */}
+      {authLoading ? null : user ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-background/40 px-4 py-3 text-sm">
+          <div className="flex items-center gap-2">
+            <HiOutlineCloud className="h-4 w-4 text-success" />
+            <span>Synced to cloud as <span className="font-medium">{user.email ?? user.id}</span></span>
+          </div>
+          <button type="button" onClick={async () => { await signOut(); navigate({ to: "/auth" }); }}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-white/5">
+            <HiOutlineArrowRightOnRectangle className="h-3.5 w-3.5" /> Sign out
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm">
+          <div className="flex items-center gap-2">
+            <HiOutlineCloud className="h-4 w-4 text-primary" />
+            <span>Currently saving to this browser only. Sign in to sync across devices.</span>
+          </div>
+          <Link to="/auth" className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground glow-primary">
+            Sign in
+          </Link>
+        </div>
+      )}
+
+      {query.error && user && (
+        <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+          Failed to load settings: {(query.error as Error).message}
+        </div>
+      )}
 
       <Section icon={<HiOutlineUserCircle className="h-5 w-5" />} title="Clinician Profile"
         subtitle="Identity used on reports and audit logs.">
@@ -164,7 +189,7 @@ function SettingsPage() {
             onChange={(e) => update("patientAge", Number(e.target.value))} className={input} />
         </Field>
         <Field label="Sex">
-          <select value={s.patientSex} onChange={(e) => update("patientSex", e.target.value as Settings["patientSex"])} className={input}>
+          <select value={s.patientSex} onChange={(e) => update("patientSex", e.target.value as SettingsData["patientSex"])} className={input}>
             <option value="male">Male</option><option value="female">Female</option><option value="other">Other</option>
           </select>
         </Field>
@@ -206,7 +231,7 @@ function SettingsPage() {
         <Toggle label="SMS alerts" hint="Send urgent SMS for red-zone events"
           value={s.smsAlerts} onChange={(v) => update("smsAlerts", v)} />
         <Field label="Severity floor">
-          <select value={s.severityFloor} onChange={(e) => update("severityFloor", e.target.value as Settings["severityFloor"])} className={input}>
+          <select value={s.severityFloor} onChange={(e) => update("severityFloor", e.target.value as SettingsData["severityFloor"])} className={input}>
             <option value="low">Low</option><option value="moderate">Moderate</option>
             <option value="high">High</option><option value="critical">Critical only</option>
           </select>
@@ -223,18 +248,18 @@ function SettingsPage() {
           </select>
         </Field>
         <Field label="Language">
-          <select value={s.language} onChange={(e) => update("language", e.target.value as Settings["language"])} className={input}>
+          <select value={s.language} onChange={(e) => update("language", e.target.value as SettingsData["language"])} className={input}>
             <option value="en">English</option><option value="es">Español</option>
             <option value="fr">Français</option><option value="de">Deutsch</option><option value="pt">Português</option>
           </select>
         </Field>
         <Field label="Units">
-          <select value={s.units} onChange={(e) => update("units", e.target.value as Settings["units"])} className={input}>
+          <select value={s.units} onChange={(e) => update("units", e.target.value as SettingsData["units"])} className={input}>
             <option value="metric">Metric</option><option value="imperial">Imperial</option>
           </select>
         </Field>
         <Field label="Date format">
-          <select value={s.dateFormat} onChange={(e) => update("dateFormat", e.target.value as Settings["dateFormat"])} className={input}>
+          <select value={s.dateFormat} onChange={(e) => update("dateFormat", e.target.value as SettingsData["dateFormat"])} className={input}>
             <option value="iso">2026-06-05 (ISO)</option>
             <option value="us">06/05/2026 (US)</option>
             <option value="eu">05/06/2026 (EU)</option>
@@ -298,17 +323,23 @@ function SettingsPage() {
           className="rounded-xl border border-border bg-background/40 px-4 py-2 text-sm hover:bg-white/5">
           Reset to defaults
         </button>
-        <button type="submit"
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground glow-primary">
-          {saved ? <><HiOutlineCheck className="h-4 w-4" /> Saved</> : "Save Changes"}
+        <button type="submit" disabled={!!syncing}
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground glow-primary disabled:opacity-60">
+          {saved ? <><HiOutlineCheck className="h-4 w-4" /> Saved</> : mutation.isPending ? "Saving…" : "Save Changes"}
         </button>
       </div>
 
       {saved && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl border border-border bg-success/15 px-4 py-2.5 text-sm text-success glow-success">
-          <HiOutlineCheck className="h-4 w-4" /> Settings saved
+          <HiOutlineCheck className="h-4 w-4" /> Settings saved{user ? " to cloud" : " locally"}
         </motion.div>
+      )}
+
+      {mutation.isError && (
+        <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+          Save failed: {(mutation.error as Error).message}
+        </div>
       )}
     </form>
   );
