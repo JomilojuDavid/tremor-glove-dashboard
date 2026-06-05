@@ -14,6 +14,7 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as DeviceRouteImport } from './routes/device'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -42,6 +43,11 @@ const DeviceRoute = DeviceRouteImport.update({
   path: '/device',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiRoute = AiRouteImport.update({
   id: '/ai',
   path: '/ai',
@@ -56,6 +62,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ai': typeof AiRoute
+  '/auth': typeof AuthRoute
   '/device': typeof DeviceRoute
   '/history': typeof HistoryRoute
   '/live': typeof LiveRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai': typeof AiRoute
+  '/auth': typeof AuthRoute
   '/device': typeof DeviceRoute
   '/history': typeof HistoryRoute
   '/live': typeof LiveRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/ai': typeof AiRoute
+  '/auth': typeof AuthRoute
   '/device': typeof DeviceRoute
   '/history': typeof HistoryRoute
   '/live': typeof LiveRoute
@@ -86,17 +95,27 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/ai'
+    | '/auth'
     | '/device'
     | '/history'
     | '/live'
     | '/reports'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ai' | '/device' | '/history' | '/live' | '/reports' | '/settings'
+  to:
+    | '/'
+    | '/ai'
+    | '/auth'
+    | '/device'
+    | '/history'
+    | '/live'
+    | '/reports'
+    | '/settings'
   id:
     | '__root__'
     | '/'
     | '/ai'
+    | '/auth'
     | '/device'
     | '/history'
     | '/live'
@@ -107,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AiRoute: typeof AiRoute
+  AuthRoute: typeof AuthRoute
   DeviceRoute: typeof DeviceRoute
   HistoryRoute: typeof HistoryRoute
   LiveRoute: typeof LiveRoute
@@ -151,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeviceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai': {
       id: '/ai'
       path: '/ai'
@@ -171,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AiRoute: AiRoute,
+  AuthRoute: AuthRoute,
   DeviceRoute: DeviceRoute,
   HistoryRoute: HistoryRoute,
   LiveRoute: LiveRoute,

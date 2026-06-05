@@ -11,11 +11,12 @@ import { TbBattery3 } from "react-icons/tb";
 import { useTheme } from "@/hooks/use-theme";
 
 export function Header({ onMenuClick }: { onMenuClick: () => void }) {
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
   const { theme, toggle } = useTheme();
   const [battery] = useState(82);
 
   useEffect(() => {
+    setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
