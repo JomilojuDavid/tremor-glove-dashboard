@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   HiOutlineBell,
   HiOutlineMagnifyingGlass,
@@ -6,14 +7,19 @@ import {
   HiOutlineSun,
   HiOutlineMoon,
   HiOutlineWifi,
+  HiOutlineArrowRightOnRectangle,
 } from "react-icons/hi2";
 import { TbBattery3 } from "react-icons/tb";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const [now, setNow] = useState<Date | null>(null);
   const { theme, toggle } = useTheme();
   const [battery] = useState(82);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : "DR";
 
   useEffect(() => {
     setNow(new Date());
@@ -74,9 +80,23 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-danger pulse-ring text-danger" />
           </button>
 
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-success font-semibold text-primary-foreground">
-            DR
-          </div>
+          {user ? (
+            <button
+              onClick={async () => { await signOut(); navigate({ to: "/auth" }); }}
+              title={`Sign out (${user.email ?? "account"})`}
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-background/40 px-2 py-1.5 text-xs hover:bg-white/5"
+            >
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-primary to-success font-semibold text-primary-foreground">{initials}</span>
+              <HiOutlineArrowRightOnRectangle className="h-4 w-4" />
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-medium text-primary-foreground glow-primary"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </div>
     </header>
