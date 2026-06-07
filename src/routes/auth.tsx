@@ -22,7 +22,7 @@ function AuthPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) navigate({ to: "/settings" });
+    if (user) navigate({ to: "/" });
   }, [user, navigate]);
 
   const onEmail = async (e: React.FormEvent) => {
@@ -32,7 +32,7 @@ function AuthPage() {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { emailRedirectTo: window.location.origin + "/settings" },
+          options: { emailRedirectTo: window.location.origin + "/" },
         });
         if (error) throw error;
         setInfo("Check your email to confirm your account, then sign in.");
@@ -49,7 +49,7 @@ function AuthPage() {
   const onGoogle = async () => {
     setBusy(true); setError(null);
     try {
-      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/settings" });
+      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/" });
       if (r.error) throw r.error;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed");
