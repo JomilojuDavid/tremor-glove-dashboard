@@ -77,6 +77,116 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_sessions: {
+        Row: {
+          avg_tremor_hz: number | null
+          created_at: string
+          device_id: string | null
+          duration_minutes: number | null
+          emg_rms: number | null
+          episode_count: number | null
+          id: string
+          notes: string | null
+          patient_id: string
+          peak_tremor_hz: number | null
+          severity: string | null
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_tremor_hz?: number | null
+          created_at?: string
+          device_id?: string | null
+          duration_minutes?: number | null
+          emg_rms?: number | null
+          episode_count?: number | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          peak_tremor_hz?: number | null
+          severity?: string | null
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_tremor_hz?: number | null
+          created_at?: string
+          device_id?: string | null
+          duration_minutes?: number | null
+          emg_rms?: number | null
+          episode_count?: number | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          peak_tremor_hz?: number | null
+          severity?: string | null
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_sessions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          condition: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          date_of_birth: string | null
+          full_name: string
+          handedness: string | null
+          id: string
+          mrn: string | null
+          notes: string | null
+          sex: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          condition?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          full_name: string
+          handedness?: string | null
+          id?: string
+          mrn?: string | null
+          notes?: string | null
+          sex?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          condition?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string
+          handedness?: string | null
+          id?: string
+          mrn?: string | null
+          notes?: string | null
+          sex?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           created_at: string
