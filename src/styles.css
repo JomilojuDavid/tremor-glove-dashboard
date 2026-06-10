@@ -98,6 +98,12 @@
   --gradient-card: linear-gradient(160deg, oklch(1 0 0 / 0.9), oklch(0.97 0.005 250 / 0.9));
 }
 
+/* Accent color overrides — applied to <html> via JS */
+.accent-blue    { --primary: oklch(0.62 0.19 258); --accent: oklch(0.62 0.19 258); --ring: oklch(0.62 0.19 258); --glow-primary: 0 0 24px oklch(0.62 0.19 258 / 0.55); --accent-hero: radial-gradient(at 12% 8%, oklch(0.62 0.19 258 / 0.18) 0, transparent 45%), radial-gradient(at 88% 92%, oklch(0.72 0.18 152 / 0.12) 0, transparent 50%); }
+.accent-emerald { --primary: oklch(0.65 0.2 150);  --accent: oklch(0.65 0.2 150);  --ring: oklch(0.65 0.2 150);  --glow-primary: 0 0 24px oklch(0.65 0.2 150 / 0.55);  --accent-hero: radial-gradient(at 12% 8%, oklch(0.65 0.2 150 / 0.18) 0, transparent 45%), radial-gradient(at 88% 92%, oklch(0.55 0.15 160 / 0.14) 0, transparent 50%); }
+.accent-violet  { --primary: oklch(0.62 0.22 300); --accent: oklch(0.62 0.22 300); --ring: oklch(0.62 0.22 300); --glow-primary: 0 0 24px oklch(0.62 0.22 300 / 0.55); --accent-hero: radial-gradient(at 12% 8%, oklch(0.62 0.22 300 / 0.18) 0, transparent 45%), radial-gradient(at 88% 92%, oklch(0.55 0.18 280 / 0.12) 0, transparent 50%); }
+.accent-amber   { --primary: oklch(0.78 0.16 85);  --accent: oklch(0.78 0.16 85);  --ring: oklch(0.78 0.16 85);  --glow-primary: 0 0 24px oklch(0.78 0.16 85 / 0.55);  --accent-hero: radial-gradient(at 12% 8%, oklch(0.78 0.16 85 / 0.18) 0, transparent 45%), radial-gradient(at 88% 92%, oklch(0.82 0.14 75 / 0.12) 0, transparent 50%); }
+
 @layer base {
   * { border-color: var(--color-border); }
   html, body { background-color: var(--color-background); color: var(--color-foreground); }
