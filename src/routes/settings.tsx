@@ -111,6 +111,7 @@ function SettingsPage() {
 
   const onSave = (e: React.FormEvent) => {
     e.preventDefault();
+    setAccent(s.accentColor as AccentColor);
     if (user) {
       mutation.mutate(s);
     } else {
