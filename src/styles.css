@@ -102,9 +102,7 @@
   * { border-color: var(--color-border); }
   html, body { background-color: var(--color-background); color: var(--color-foreground); }
   body {
-    background-image:
-      radial-gradient(at 12% 8%, oklch(0.62 0.19 258 / 0.18) 0, transparent 45%),
-      radial-gradient(at 88% 92%, oklch(0.72 0.18 152 / 0.12) 0, transparent 50%);
+    background-image: var(--accent-hero, radial-gradient(at 12% 8%, oklch(0.62 0.19 258 / 0.18) 0, transparent 45%), radial-gradient(at 88% 92%, oklch(0.72 0.18 152 / 0.12) 0, transparent 50%));
     background-attachment: fixed;
     min-height: 100vh;
     font-feature-settings: "ss01", "cv11";
