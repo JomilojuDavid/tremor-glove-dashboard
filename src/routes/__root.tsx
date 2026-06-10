@@ -12,6 +12,8 @@ import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
+import { getAccentFromStorage, applyAccent } from "@/hooks/use-accent";
+
 
 function NotFoundComponent() {
   return (
@@ -78,6 +80,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  useEffect(() => {
+    applyAccent(getAccentFromStorage());
+  }, []);
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
