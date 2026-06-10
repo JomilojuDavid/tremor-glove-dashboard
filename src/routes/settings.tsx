@@ -311,7 +311,7 @@ function SettingsPage() {
               const dot = { blue: "#3b82f6", emerald: "#22c55e", violet: "#8b5cf6", amber: "#facc15" }[c];
               const active = s.accentColor === c;
               return (
-                <button key={c} type="button" onClick={() => update("accentColor", c)}
+                <button key={c} type="button" onClick={() => { update("accentColor", c); setAccent(c); }}
                   className={`group relative h-10 w-10 rounded-xl border transition-all ${active ? "border-foreground scale-110" : "border-border hover:border-foreground/40"}`}
                   style={{ background: dot }} aria-label={c}>
                   {active && <HiOutlineCheck className="absolute inset-0 m-auto h-5 w-5 text-white drop-shadow" />}
