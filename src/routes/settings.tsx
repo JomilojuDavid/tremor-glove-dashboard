@@ -92,7 +92,9 @@ function SettingsPage() {
     if (user) {
       if (query.data) setS({ ...DEFAULTS, ...(query.data.data ?? {}) });
     } else {
-      setS(loadLocal());
+      const local = loadLocal();
+      setS(local);
+      setAccent(local.accentColor as AccentColor);
     }
   }, [user, query.data]);
 
