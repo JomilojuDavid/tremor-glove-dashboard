@@ -12,6 +12,8 @@ import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
+import { getAccentFromStorage, applyAccent } from "@/hooks/use-accent";
+
 
 function NotFoundComponent() {
   return (
