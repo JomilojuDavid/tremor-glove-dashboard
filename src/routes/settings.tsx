@@ -17,6 +17,7 @@ import {
 } from "react-icons/hi2";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
+import { setAccent, type AccentColor } from "@/hooks/use-accent";
 import { getSettings, saveSettings, type SettingsData } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
