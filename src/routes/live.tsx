@@ -2,6 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useBioSignal } from "@/hooks/use-biosignal";
 import { WaveformChart, SpectrumChart, RmsChart } from "@/components/dashboard/Charts";
 import { ClassificationCard } from "@/components/dashboard/ClassificationCard";
+import { getHealth } from "@/services/api";
+
+useEffect(() => {
+  getHealth()
+      .then((data) => console.log(data))
+      .catch((err) => console.error(err));
+}, []);
 
 export const Route = createFileRoute("/live")({
   component: () => {
