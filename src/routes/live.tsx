@@ -3,6 +3,11 @@ import { useBioSignal } from "@/hooks/use-biosignal";
 import { WaveformChart, SpectrumChart, RmsChart } from "@/components/dashboard/Charts";
 import { ClassificationCard } from "@/components/dashboard/ClassificationCard";
 import { getHealth } from "@/services/api";
+import { useEffect } from "react";
+
+export const Route = createFileRoute("/live")({
+  component: () => {
+    const bio = useBioSignal();
 
 useEffect(() => {
   getHealth()
@@ -10,10 +15,7 @@ useEffect(() => {
       .catch((err) => console.error(err));
 }, []);
 
-export const Route = createFileRoute("/live")({
-  component: () => {
-    const bio = useBioSignal();
-    return (
+return (
       <div className="space-y-4">
         <ClassificationCard severity={bio.severity} confidence={bio.confidence} />
         <div className="grid gap-4 xl:grid-cols-2">
