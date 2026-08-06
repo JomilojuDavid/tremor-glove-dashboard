@@ -7,7 +7,7 @@ import { useEffect } from "react";
 
 export const Route = createFileRoute("/live")({
   component: () => {
-    const bio = useBioSignal();
+    const [latest, setLatest] = useState<LatestResponse | null>(null);
 
 useEffect(() => {
   getHealth()
