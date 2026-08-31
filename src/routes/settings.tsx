@@ -14,6 +14,7 @@ import {
   HiOutlineClipboardDocumentList,
   HiOutlineCloud,
   HiOutlineArrowRightOnRectangle,
+  HiOutlineWifi,
 } from "react-icons/hi2";
 import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
@@ -57,6 +58,11 @@ const DEFAULTS: SettingsData = {
   reportFooter: "Confidential — for clinical use only.",
   autoReport: false,
   accentColor: "blue",
+  wifiEnabled: false,
+  wifiSSID: "",
+  wifiPassword: "",
+  wifiConnected: false,
+  wifiSignalStrength: 0,
 };
 
 const LOCAL_KEY = "neurosense-settings";
@@ -224,6 +230,33 @@ function SettingsPage() {
               onChange={(e) => update("filterHigh", Number(e.target.value))} className={input} />
           </div>
         </Field>
+      </Section>
+
+      <Section icon={<HiOutlineWifi className="h-5 w-5" />} title="WiFi Connection"
+        subtitle="Connect your device to a WiFi network.">
+        <Toggle label="Enable WiFi" hint="Connect device to WiFi network"
+          value={s.wifiEnabled} onChange={(v) => update("wifiEnabled", v)} />
+        {s.wifiEnabled && (
+          <>
+            <Field label="Network Name (SSID)"><input type="text" value={s.wifiSSID} onChange={(e) => update("wifiSSID", e.target.value)} placeholder="Enter WiFi network name" className={input} /></Field>
+            <Field label="Password"><input type="password" value={s.wifiPassword} onChange={(e) => update("wifiPassword", e.target.value)} placeholder="Enter WiFi password" className={input} /></Field>
+            <Field label="Connection Status">
+              <div className="flex items-center gap-2 rounded-lg bg-background/40 px-3 py-2.5 text-sm">
+                <span className={`inline-flex h-2 w-2 rounded-full ${s.wifiConnected ? "bg-success animate-pulse" : "bg-muted"}`}></span>
+                <span className={s.wifiConnected ? "text-success font-medium" : "text-muted-foreground"}>
+                  {s.wifiConnected ? "✓ Connected" : "Disconnected"}
+                </span>
+              </div>
+            </Field>
+            {s.wifiConnected && (
+              <Field label={`Signal Strength — ${s.wifiSignalStrength}%`}>
+                <div className="w-full rounded-lg bg-muted h-2 overflow-hidden">
+                  <div className="h-full bg-success" style={{ width: `${s.wifiSignalStrength}%` }}></div>
+                </div>
+              </Field>
+            )}
+          </>
+        )}
       </Section>
 
       <Section icon={<HiOutlineBellAlert className="h-5 w-5" />} title="Alerts & Notifications"

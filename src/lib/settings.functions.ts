@@ -37,6 +37,11 @@ const SettingsSchema = z.object({
   reportFooter: z.string().max(400).default(""),
   autoReport: z.boolean().default(false),
   accentColor: z.enum(["blue", "emerald", "violet", "amber"]).default("blue"),
+  wifiEnabled: z.boolean().default(false),
+  wifiSSID: z.string().max(32).default(""),
+  wifiPassword: z.string().max(63).default(""),
+  wifiConnected: z.boolean().default(false),
+  wifiSignalStrength: z.number().min(0).max(100).default(0),
 });
 
 export type SettingsData = z.infer<typeof SettingsSchema>;
