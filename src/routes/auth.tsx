@@ -128,6 +128,13 @@ function AuthPage() {
             className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground glow-primary disabled:opacity-50">
             {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
           </button>
+
+          {needsConfirm && mode === "signin" && (
+            <button type="button" onClick={onResend} disabled={busy || !email}
+              className="w-full rounded-xl border border-border bg-background/40 px-4 py-2 text-xs hover:bg-white/5 disabled:opacity-50">
+              Resend confirmation email
+            </button>
+          )}
         </form>
 
         <div className="mt-5 text-center text-xs text-muted-foreground">
