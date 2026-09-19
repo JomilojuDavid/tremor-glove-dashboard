@@ -25,24 +25,54 @@ function AuthPage() {
     if (user) navigate({ to: "/" });
   }, [user, navigate]);
 
+  const [needsConfirm, setNeedsConfirm] = useState(false);
+
+  const friendly = (msg: string) => {
+    const m = msg.toLowerCase();
+    if (m.includes("email not confirmed")) return "Your email isn't confirmed yet. Open the confirmation link we emailed you, or resend it below.";
+    if (m.includes("invalid login credentials")) return "Wrong email or password — or this account hasn't been confirmed yet.";
+    if (m.includes("known to be weak") || m.includes("pwned")) return "That password appears in known data breaches. Please choose a stronger one.";
+    if (m.includes("already registered")) return "An account with this email already exists. Try signing in instead.";
+    return msg;
+  };
+
   const onEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(true); setError(null); setInfo(null);
+    setBusy(true); setError(null); setInfo(null); setNeedsConfirm(false);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email, password,
           options: { emailRedirectTo: window.location.origin + "/" },
         });
         if (error) throw error;
-        setInfo("Check your email to confirm your account, then sign in.");
+        if (data.session) return; // auto-confirmed: redirect handled by useAuth effect
+        setInfo("Account created. Check your email for the confirmation link, then sign in.");
+        setNeedsConfirm(true);
         setMode("signin");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed");
+      const msg = err instanceof Error ? err.message : "Authentication failed";
+      setError(friendly(msg));
+      if (/not confirmed|invalid login credentials/i.test(msg)) setNeedsConfirm(true);
+    } finally { setBusy(false); }
+  };
+
+  const onResend = async () => {
+    setBusy(true); setError(null); setInfo(null);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: window.location.origin + "/" },
+      });
+      if (error) throw error;
+      setInfo("Confirmation email sent again. Check your inbox and spam folder.");
+    } catch (err) {
+      setError(err instanceof Error ? friendly(err.message) : "Could not resend the email");
     } finally { setBusy(false); }
   };
 
@@ -98,6 +128,13 @@ function AuthPage() {
             className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground glow-primary disabled:opacity-50">
             {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
           </button>
+
+          {needsConfirm && mode === "signin" && (
+            <button type="button" onClick={onResend} disabled={busy || !email}
+              className="w-full rounded-xl border border-border bg-background/40 px-4 py-2 text-xs hover:bg-white/5 disabled:opacity-50">
+              Resend confirmation email
+            </button>
+          )}
         </form>
 
         <div className="mt-5 text-center text-xs text-muted-foreground">
