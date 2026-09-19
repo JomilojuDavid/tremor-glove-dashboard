@@ -79,8 +79,20 @@ function AuthPage() {
   const onGoogle = async () => {
     setBusy(true); setError(null);
     try {
-      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/" });
-      if (r.error) throw r.error;
+      const onLovableHosting = /\.lovable\.app$/.test(window.location.hostname);
+      if (onLovableHosting) {
+        // Managed Google sign-in via the Lovable OAuth broker (works on *.lovable.app)
+        const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/" });
+        if (r.error) throw r.error;
+      } else {
+        // Custom deployments (e.g. Vercel): use the Google credentials configured
+        // in Cloud → Users → Authentication Settings → Sign In Methods → Google.
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: window.location.origin + "/" },
+        });
+        if (error) throw error;
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed");
       setBusy(false);
