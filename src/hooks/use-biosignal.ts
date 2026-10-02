@@ -15,6 +15,16 @@ export interface RmsPoint {
   rms: number;
 }
 
+export interface SensorHistoryPoint {
+  t: number;
+  aX: number;
+  aY: number;
+  aZ: number;
+  gX: number;
+  gY: number;
+  gZ: number;
+}
+
 export type Severity = "NORMAL" | "MILD" | "SEVERE";
 
 export type ConnectionStatus = "connected" | "disconnected" | "checking";
@@ -23,6 +33,7 @@ export interface BioSnapshot {
   waveform: WaveformPoint[];
   spectrum: SpectrumPoint[];
   rms: RmsPoint[];
+  sensorHistory: SensorHistoryPoint[];
 
   frequency: number | null;
   amplitude: number | null;
@@ -121,15 +132,20 @@ function createEmptySnapshot(): BioSnapshot {
     waveform: [],
     spectrum: [],
     rms: [],
+    sensorHistory: [],
+
     frequency: null,
     amplitude: null,
     rmsCurrent: null,
+
     severity: "NORMAL",
     predictionLabel: null,
     severityScore: null,
     confidence: null,
+
     signalStrength: null,
     aiAccuracy: null,
+
     sensor: null,
     recommendation: "Waiting for sensor data.",
     timestamp: null,
@@ -143,9 +159,13 @@ export const BioSignalContext = createContext<BioSnapshot | null>(null);
 
 export function useBioSignal(): BioSnapshot {
   const snapshot = useContext(BioSignalContext);
+
   if (!snapshot) {
-    throw new Error("useBioSignal must be used within the application shell.");
+    throw new Error(
+      "useBioSignal must be used within the application shell.",
+    );
   }
+
   return snapshot;
 }
 
@@ -160,6 +180,7 @@ export function useBioSignalSource(): BioSnapshot {
 
     const fetchLatest = async () => {
       controller = new AbortController();
+
       try {
         const response = await fetch(API_URL, {
           method: "GET",
@@ -179,6 +200,7 @@ export function useBioSignalSource(): BioSnapshot {
         if (!mounted) return;
 
         let data: LatestResponse | null = null;
+
         if (isLatestResponse(responseData)) {
           data = responseData;
         } else {
@@ -193,7 +215,11 @@ export function useBioSignalSource(): BioSnapshot {
         }
 
         const backendSeverity = data.prediction.severity;
-        const severity = convertSeverity(data.prediction.label, backendSeverity);
+        const severity = convertSeverity(
+          data.prediction.label,
+          backendSeverity,
+        );
+
         const confidence = data.prediction.confidence;
         const sensor = data.sensor;
 
@@ -234,10 +260,34 @@ export function useBioSignalSource(): BioSnapshot {
             },
           ].slice(-40);
 
+          /*
+           * Store the actual real-time MPU6050 readings.
+           *
+           * These values come directly from the backend:
+           *   aX, aY, aZ = accelerometer
+           *   gX, gY, gZ = gyroscope
+           *
+           * No sensor values are generated or simulated here.
+           */
+          const sensorHistory: SensorHistoryPoint[] = [
+            ...previous.sensorHistory,
+            {
+              t: sampleIndex,
+              aX: sensor.aX,
+              aY: sensor.aY,
+              aZ: sensor.aZ,
+              gX: sensor.gX,
+              gY: sensor.gY,
+              gZ: sensor.gZ,
+            },
+          ].slice(-WINDOW);
+
           return {
             ...previous,
+
             waveform,
             rms,
+            sensorHistory,
 
             // The current API returns individual sensor readings, not
             // a time-window/FFT result, so no frequency is invented here.
@@ -264,6 +314,7 @@ export function useBioSignalSource(): BioSnapshot {
         });
       } catch (error) {
         if (!mounted || controller?.signal.aborted) return;
+
         console.error("Latest prediction API error:", error);
 
         setSnap((previous) => ({
@@ -283,7 +334,11 @@ export function useBioSignalSource(): BioSnapshot {
 
     return () => {
       mounted = false;
-      if (timeout !== undefined) window.clearTimeout(timeout);
+
+      if (timeout !== undefined) {
+        window.clearTimeout(timeout);
+      }
+
       controller?.abort();
     };
   }, []);
