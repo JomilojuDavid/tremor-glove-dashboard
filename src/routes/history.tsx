@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
@@ -12,7 +12,6 @@ import {
   HiOutlineTrash,
   HiOutlinePencilSquare,
   HiOutlineXMark,
-  HiOutlineShieldCheck,
   HiOutlineCalendarDays,
   HiOutlineIdentification,
   HiOutlineChartBar,
@@ -22,7 +21,6 @@ import {
   HiOutlineArrowUturnLeft,
   HiOutlineClipboardDocumentList,
 } from "react-icons/hi2";
-import { useAuth } from "@/hooks/use-auth";
 import {
   listPatients,
   upsertPatient,
@@ -40,6 +38,8 @@ export const Route = createFileRoute("/history")({
   component: HistoryPage,
   head: () => ({ meta: [{ title: "Patient History — NeuroSense AI" }] }),
 });
+
+const RECORDS_REQUIRE_AUTH = true;
 
 const SEVERITY_TONE: Record<string, string> = {
   low: "bg-success/15 text-success border-success/30",
@@ -94,7 +94,6 @@ function ageFromDob(dob?: string | null) {
 }
 
 function HistoryPage() {
-  const { user } = useAuth();
   const qc = useQueryClient();
   const fetchPatients = useServerFn(listPatients);
   const savePatient = useServerFn(upsertPatient);
@@ -103,7 +102,7 @@ function HistoryPage() {
   const patientsQ = useQuery({
     queryKey: ["patients"],
     queryFn: () => fetchPatients(),
-    enabled: !!user,
+    enabled: !RECORDS_REQUIRE_AUTH,
   });
 
   const [q, setQ] = useState("");
@@ -161,21 +160,14 @@ function HistoryPage() {
     URL.revokeObjectURL(url);
   };
 
-  if (!user) {
+  if (RECORDS_REQUIRE_AUTH) {
     return (
       <div className="mx-auto max-w-5xl">
         <div className="glass rounded-2xl p-10 text-center">
-          <HiOutlineShieldCheck className="mx-auto h-10 w-10 text-primary" />
-          <h1 className="mt-3 text-xl font-semibold">Sign in to access patient history</h1>
+          <h1 className="text-xl font-semibold">Patient history unavailable</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Patient records are private to each clinician and require authentication.
+            Patient records are private to each clinician and require an authenticated session.
           </p>
-          <Link
-            to="/auth"
-            className="mt-6 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground glow-primary"
-          >
-            Sign in
-          </Link>
         </div>
       </div>
     );

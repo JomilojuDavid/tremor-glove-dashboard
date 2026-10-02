@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
@@ -17,9 +17,7 @@ import {
   HiOutlineCloud,
   HiOutlineClipboardDocumentList,
   HiOutlineChartBar,
-  HiOutlineShieldCheck,
 } from "react-icons/hi2";
-import { useAuth } from "@/hooks/use-auth";
 import {
   listReports,
   upsertReport,
@@ -32,6 +30,8 @@ export const Route = createFileRoute("/reports")({
   component: ReportsPage,
   head: () => ({ meta: [{ title: "Clinical Reports — NeuroSense AI" }] }),
 });
+
+const RECORDS_REQUIRE_AUTH = true;
 
 const TYPE_LABELS: Record<string, string> = {
   session: "Session Summary",
@@ -73,7 +73,6 @@ function emptyDraft(): ReportInput {
 }
 
 function ReportsPage() {
-  const { user } = useAuth();
   const qc = useQueryClient();
   const fetchAll = useServerFn(listReports);
   const save = useServerFn(upsertReport);
@@ -82,7 +81,7 @@ function ReportsPage() {
   const query = useQuery({
     queryKey: ["clinical-reports"],
     queryFn: () => fetchAll(),
-    enabled: !!user,
+    enabled: !RECORDS_REQUIRE_AUTH,
   });
 
   const [q, setQ] = useState("");
@@ -144,7 +143,7 @@ function ReportsPage() {
   };
 
   const onSign = (r: ReportRow) => {
-    const signed_by = user?.email ?? "Clinician";
+    const signed_by = "Clinician";
     const payload: ReportInput = {
       ...(r as ReportInput),
       status: "signed",
@@ -154,18 +153,14 @@ function ReportsPage() {
     saveMut.mutate(payload);
   };
 
-  if (!user) {
+  if (RECORDS_REQUIRE_AUTH) {
     return (
       <div className="mx-auto max-w-5xl">
         <div className="glass rounded-2xl p-10 text-center">
-          <HiOutlineShieldCheck className="mx-auto h-10 w-10 text-primary" />
-          <h1 className="mt-3 text-xl font-semibold">Sign in to access clinical reports</h1>
+          <h1 className="text-xl font-semibold">Clinical reports unavailable</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Reports are stored securely per clinician and require authentication.
+            Clinical reports are private to each clinician and require an authenticated session.
           </p>
-          <Link to="/auth" className="mt-6 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground glow-primary">
-            Sign in
-          </Link>
         </div>
       </div>
     );

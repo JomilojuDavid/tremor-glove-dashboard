@@ -1,8 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useServerFn } from "@tanstack/react-start";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   HiOutlineUserCircle,
   HiOutlineBellAlert,
@@ -12,14 +10,11 @@ import {
   HiOutlineGlobeAlt,
   HiOutlineShieldCheck,
   HiOutlineClipboardDocumentList,
-  HiOutlineCloud,
-  HiOutlineArrowRightOnRectangle,
   HiOutlineWifi,
 } from "react-icons/hi2";
 import { useTheme } from "@/hooks/use-theme";
-import { useAuth } from "@/hooks/use-auth";
 import { setAccent, type AccentColor } from "@/hooks/use-accent";
-import { getSettings, saveSettings, type SettingsData } from "@/lib/settings.functions";
+import type { SettingsData } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
 
@@ -76,41 +71,17 @@ function loadLocal(): SettingsData {
 }
 
 function SettingsPage() {
-  const { user, loading: authLoading, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
-  const navigate = useNavigate();
-  const qc = useQueryClient();
 
   const [s, setS] = useState<SettingsData>(DEFAULTS);
   const [saved, setSaved] = useState(false);
 
-  const fetchSettings = useServerFn(getSettings);
-  const persistSettings = useServerFn(saveSettings);
-
-  const query = useQuery({
-    queryKey: ["user-settings", user?.id ?? "anon"],
-    queryFn: () => fetchSettings(),
-    enabled: !!user,
-  });
-
-  // Hydrate state from remote (signed in) or local (signed out).
+  // Settings are stored in this browser only.
   useEffect(() => {
-    if (user) {
-      if (query.data) setS({ ...DEFAULTS, ...(query.data.data ?? {}) });
-    } else {
-      const local = loadLocal();
-      setS(local);
-      setAccent(local.accentColor as AccentColor);
-    }
-  }, [user, query.data]);
-
-  const mutation = useMutation({
-    mutationFn: (data: SettingsData) => persistSettings({ data }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["user-settings"] });
-      setSaved(true); setTimeout(() => setSaved(false), 2000);
-    },
-  });
+    const local = loadLocal();
+    setS(local);
+    setAccent(local.accentColor as AccentColor);
+  }, []);
 
   const update = <K extends keyof SettingsData>(k: K, v: SettingsData[K]) =>
     setS((prev) => ({ ...prev, [k]: v }));
@@ -118,17 +89,11 @@ function SettingsPage() {
   const onSave = (e: React.FormEvent) => {
     e.preventDefault();
     setAccent(s.accentColor as AccentColor);
-    if (user) {
-      mutation.mutate(s);
-    } else {
-      try { localStorage.setItem(LOCAL_KEY, JSON.stringify(s)); } catch {}
-      setSaved(true); setTimeout(() => setSaved(false), 2000);
-    }
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(s)); } catch {}
+    setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
 
   const onReset = () => setS(DEFAULTS);
-
-  const syncing = user && (query.isLoading || mutation.isPending);
 
   return (
     <form onSubmit={onSave} className="mx-auto max-w-5xl space-y-6">
@@ -143,42 +108,12 @@ function SettingsPage() {
             className="rounded-xl border border-border bg-background/40 px-4 py-2 text-sm hover:bg-white/5">
             Reset
           </button>
-          <button type="submit" disabled={!!syncing}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground glow-primary disabled:opacity-60">
-            {saved ? <><HiOutlineCheck className="h-4 w-4" /> Saved</> : mutation.isPending ? "Saving…" : "Save Changes"}
+          <button type="submit"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+            {saved ? <><HiOutlineCheck className="h-4 w-4" /> Saved</> : "Save Changes"}
           </button>
         </div>
       </header>
-
-      {/* Sync status banner */}
-      {authLoading ? null : user ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-background/40 px-4 py-3 text-sm">
-          <div className="flex items-center gap-2">
-            <HiOutlineCloud className="h-4 w-4 text-success" />
-            <span>Synced to cloud as <span className="font-medium">{user.email ?? user.id}</span></span>
-          </div>
-          <button type="button" onClick={async () => { await signOut(); navigate({ to: "/auth" }); }}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-white/5">
-            <HiOutlineArrowRightOnRectangle className="h-3.5 w-3.5" /> Sign out
-          </button>
-        </div>
-      ) : (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm">
-          <div className="flex items-center gap-2">
-            <HiOutlineCloud className="h-4 w-4 text-primary" />
-            <span>Currently saving to this browser only. Sign in to sync across devices.</span>
-          </div>
-          <Link to="/auth" className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground glow-primary">
-            Sign in
-          </Link>
-        </div>
-      )}
-
-      {query.error && user && (
-        <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
-          Failed to load settings: {(query.error as Error).message}
-        </div>
-      )}
 
       <Section icon={<HiOutlineUserCircle className="h-5 w-5" />} title="Clinician Profile"
         subtitle="Identity used on reports and audit logs.">
