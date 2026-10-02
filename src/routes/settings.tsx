@@ -14,71 +14,20 @@ import {
 } from "react-icons/hi2";
 import { useTheme } from "@/hooks/use-theme";
 import { setAccent, type AccentColor } from "@/hooks/use-accent";
+import { DEFAULT_SETTINGS, readSettings, writeSettings } from "@/hooks/use-settings";
 import type { SettingsData } from "@/lib/settings.functions";
 
 export const Route = createFileRoute("/settings")({ component: SettingsPage });
 
-const DEFAULTS: SettingsData = {
-  clinicianName: "Dr. Rohan Mehta",
-  clinicianEmail: "r.mehta@neurosense.ai",
-  clinicianPhone: "+1 415 555 0142",
-  licenseNumber: "MD-204918",
-  organization: "NeuroSense Research Lab",
-  department: "Movement Disorders",
-  patientId: "PT-00421",
-  patientName: "Anonymous Subject",
-  patientAge: 62,
-  patientSex: "male",
-  deviceSerial: "NS-EMG-0042",
-  firmware: "2.4.1",
-  samplingHz: 200,
-  tremorThreshold: 4.5,
-  emgGain: 1000,
-  filterLow: 20,
-  filterHigh: 450,
-  alertSound: true,
-  emailAlerts: true,
-  smsAlerts: false,
-  alertEmail: "alerts@neurosense.ai",
-  alertPhone: "+1 415 555 0199",
-  severityFloor: "moderate",
-  timezone: "UTC",
-  language: "en",
-  units: "metric",
-  dateFormat: "iso",
-  retentionDays: 90,
-  anonymizeExports: true,
-  shareTelemetry: false,
-  reportHeader: "NeuroSense Clinical Report",
-  reportFooter: "Confidential — for clinical use only.",
-  autoReport: false,
-  accentColor: "blue",
-  wifiEnabled: false,
-  wifiSSID: "",
-  wifiPassword: "",
-  wifiConnected: false,
-  wifiSignalStrength: 0,
-};
-
-const LOCAL_KEY = "neurosense-settings";
-
-function loadLocal(): SettingsData {
-  try {
-    const raw = localStorage.getItem(LOCAL_KEY);
-    if (raw) return { ...DEFAULTS, ...JSON.parse(raw) };
-  } catch {}
-  return DEFAULTS;
-}
-
 function SettingsPage() {
   const { theme, setTheme } = useTheme();
 
-  const [s, setS] = useState<SettingsData>(DEFAULTS);
+  const [s, setS] = useState<SettingsData>(DEFAULT_SETTINGS);
   const [saved, setSaved] = useState(false);
 
   // Settings are stored in this browser only.
   useEffect(() => {
-    const local = loadLocal();
+    const local = readSettings();
     setS(local);
     setAccent(local.accentColor as AccentColor);
   }, []);
@@ -88,12 +37,14 @@ function SettingsPage() {
 
   const onSave = (e: React.FormEvent) => {
     e.preventDefault();
-    setAccent(s.accentColor as AccentColor);
-    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(s)); } catch {}
+    writeSettings(s);
     setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
 
-  const onReset = () => setS(DEFAULTS);
+  const onReset = () => {
+    setS(DEFAULT_SETTINGS);
+    setAccent(DEFAULT_SETTINGS.accentColor as AccentColor);
+  };
 
   return (
     <form onSubmit={onSave} className="mx-auto max-w-5xl space-y-6">
@@ -295,23 +246,17 @@ function SettingsPage() {
           className="rounded-xl border border-border bg-background/40 px-4 py-2 text-sm hover:bg-white/5">
           Reset to defaults
         </button>
-        <button type="submit" disabled={!!syncing}
+        <button type="submit"
           className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground glow-primary disabled:opacity-60">
-          {saved ? <><HiOutlineCheck className="h-4 w-4" /> Saved</> : mutation.isPending ? "Saving…" : "Save Changes"}
+          {saved ? <><HiOutlineCheck className="h-4 w-4" /> Saved</> : "Save Changes"}
         </button>
       </div>
 
       {saved && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl border border-border bg-success/15 px-4 py-2.5 text-sm text-success glow-success">
-          <HiOutlineCheck className="h-4 w-4" /> Settings saved{user ? " to cloud" : " locally"}
+          <HiOutlineCheck className="h-4 w-4" /> Settings saved on this device
         </motion.div>
-      )}
-
-      {mutation.isError && (
-        <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
-          Save failed: {(mutation.error as Error).message}
-        </div>
       )}
     </form>
   );

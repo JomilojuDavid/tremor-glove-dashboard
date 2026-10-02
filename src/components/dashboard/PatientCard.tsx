@@ -1,9 +1,7 @@
 import {
   HiOutlineUser,
-  HiOutlineIdentification,
   HiOutlineClock,
   HiOutlineHeart,
-  HiOutlineCpuChip,
   HiOutlineSignal,
 } from "react-icons/hi2";
 import { useSettings } from "@/hooks/use-settings";
@@ -31,11 +29,6 @@ export function PatientCard({
       icon: HiOutlineHeart,
       label: "Age",
       value: `${s.patientAge} yrs`,
-    },
-    {
-      icon: HiOutlineIdentification,
-      label: "Device ID",
-      value: s.deviceSerial || "—",
     },
     {
       icon: HiOutlineClock,
@@ -72,7 +65,7 @@ export function PatientCard({
       </div>
 
       {/* Patient information */}
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {items.map((it) => (
           <div
             key={it.label}
@@ -91,7 +84,7 @@ export function PatientCard({
       </div>
 
       {/* System status */}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-3">
         <div className={`rounded-xl border p-3 ${linkUp ? "border-success/20 bg-success/5" : "border-border bg-background/30"}`}>
           <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
             <HiOutlineSignal className="h-3.5 w-3.5" />
@@ -104,36 +97,6 @@ export function PatientCard({
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-background/30 p-3">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-            <HiOutlineCpuChip className="h-3.5 w-3.5" />
-            Firmware
-          </div>
-
-          <div className="mt-1.5 text-sm font-semibold">
-            v{s.firmware || "—"}
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-background/30 p-3">
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Sampling
-          </div>
-
-          <div className="mt-1.5 text-sm font-semibold">
-            Not available
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-background/30 p-3">
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Threshold
-          </div>
-
-          <div className="mt-1.5 text-sm font-semibold">
-            Not available
-          </div>
-        </div>
       </div>
     </div>
   );

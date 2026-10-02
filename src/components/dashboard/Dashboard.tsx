@@ -46,7 +46,7 @@ export function Dashboard() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold">Live Sensor Data</h2>
+          <h2 className="text-sm font-semibold">Sensor Data</h2>
           <span className="flex items-center gap-2 text-xs text-muted-foreground">
             <span
               className={`h-2 w-2 rounded-full ${
@@ -57,7 +57,7 @@ export function Dashboard() {
                     : "bg-muted-foreground"
               }`}
             />
-            MPU6050 • {bio.connectionStatus === "connected"
+            {bio.connectionStatus === "connected"
               ? "Live"
               : bio.connectionStatus === "disconnected"
                 ? "Offline"

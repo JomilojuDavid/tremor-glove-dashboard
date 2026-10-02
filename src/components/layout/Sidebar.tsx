@@ -82,10 +82,8 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           <div className="mt-4 rounded-2xl border border-border bg-background/40 p-4">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className={`h-2 w-2 rounded-full ${connectionStatus === "connected" ? "bg-success pulse-ring text-success" : connectionStatus === "disconnected" ? "bg-danger" : "bg-warning"}`} />
-              {connectionStatus === "connected" ? "Device Online" : connectionStatus === "disconnected" ? "Device Offline" : "Checking Backend"}
+              {connectionStatus === "connected" ? "Service Online" : connectionStatus === "disconnected" ? "Service Offline" : "Checking Service"}
             </div>
-            <div className="mt-2 text-xs">Firmware <span className="text-foreground">Not available</span></div>
-            <div className="mt-1 text-xs">Uptime <span className="text-foreground">Not available</span></div>
           </div>
         </div>
       </aside>

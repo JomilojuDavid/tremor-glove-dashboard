@@ -59,7 +59,7 @@ export function readSettings(): SettingsData {
   } catch {
     cache = DEFAULT_SETTINGS;
   }
-  return cache;
+  return cache ?? DEFAULT_SETTINGS;
 }
 
 /** Persist settings, apply side effects and notify every subscriber. */
@@ -67,7 +67,9 @@ export function writeSettings(next: SettingsData) {
   cache = next;
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
-  } catch {}
+  } catch {
+    // Keep the in-memory settings usable when browser storage is unavailable.
+  }
   applyAccent((next.accentColor ?? "blue") as AccentColor);
   listeners.forEach((l) => l(next));
 }
